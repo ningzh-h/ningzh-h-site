@@ -1,0 +1,55 @@
+---
+import type { BookInfo } from '../lib/content';
+import { formatNumber } from '../lib/format';
+
+interface Props {
+  book: BookInfo;
+}
+
+const { book } = Astro.props;
+
+const coverShades = ['#1b2f33', '#1f2a3a', '#2f2720', '#2b2433', '#33242a'];
+
+const hash = [...book.slug].reduce((total, char) => total + char.charCodeAt(0), 0);
+const coverB = coverShades[hash % coverShades.length];
+const statusLabels: Record<string, string> = {
+  reading: '在读',
+  finished: '读完',
+  planned: '想读',
+  paused: '搁置',
+  todo: '待开始',
+  doing: '进行中',
+  done: '已完成',
+  archived: '已归档',
+};
+const statusLabel = statusLabels[book.status] ?? book.status;
+const chapterLabel =
+  book.mode === 'single'
+    ? '单篇长文'
+    : book.chapters.length > 0
+      ? `${book.chapters.length} 章`
+      : `${book.pageCount} 节`;
+---
+
+<a
+  class="book-card"
+  href={book.href}
+  style={`--cover-b:${coverB};`}
+  aria-label={`${book.title}（${statusLabel}）`}
+>
+  <div class="book-cover">
+    {book.cover ? <img src={book.cover} alt="" /> : <span class="book-cover-title">{book.title}</span>}
+  </div>
+  <div class="book-body">
+    <div class="book-meta">
+      <span class={`status status-${book.status}`}>{statusLabel}</span>
+      <span>{chapterLabel}</span>
+      {book.index.data.draft && <span class="draft-badge">草稿</span>}
+    </div>
+    {book.description && <p class="book-desc">{book.description}</p>}
+    <div class="book-foot">
+      <span>{book.tags.map((tag) => `#${tag}`).join(' ')}</span>
+      <span>{formatNumber(book.wordCount)} 字</span>
+    </div>
+  </div>
+</a>

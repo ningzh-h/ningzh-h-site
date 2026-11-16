@@ -1,0 +1,32 @@
+---
+import type { RecreationItem } from '../lib/recreation';
+import { formatRating, formatShortDate } from '../lib/format';
+
+interface Props {
+  entry: RecreationItem;
+}
+
+const { entry } = Astro.props;
+---
+
+<a
+  class="book-card review-card"
+  href={entry.href}
+  style={`--cover-b:${entry.coverB};`}
+  aria-label={`${entry.title}（${entry.categoryLabel}）`}
+>
+  <div class="book-cover review-cover">
+    <span class="cover-badge">{entry.initial}</span>
+    <span class="book-cover-title">{entry.title}</span>
+  </div>
+  <div class="book-body">
+    <div class="book-meta">
+      <span class="tag">{entry.categoryLabel}</span>
+      {entry.creator && <span>{entry.creator}</span>}
+    </div>
+    <div class="book-foot" style="margin-top:auto">
+      {entry.rating ? <span class="rating">{formatRating(entry.rating)}</span> : <span />}
+      <span>{formatShortDate(entry.date)}</span>
+    </div>
+  </div>
+</a>

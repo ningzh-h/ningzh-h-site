@@ -1,0 +1,68 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      # 用户站点（<user>.github.io）base 为 /；项目站点为 /<repo>
+      - name: Resolve site and base path
+        id: cfg
+        shell: bash
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          repo="${{ github.event.repository.name }}"
+          if [ "$repo" = "${owner}.github.io" ]; then
+            base="/"
+          else
+            base="/${repo}"
+          fi
+          echo "base=${base}" >> "$GITHUB_OUTPUT"
+          echo "site=https://${owner}.github.io" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          BASE_PATH: ${{ vars.BASE_PATH || steps.cfg.outputs.base }}
+          SITE_URL: ${{ vars.SITE_URL || steps.cfg.outputs.site }}
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

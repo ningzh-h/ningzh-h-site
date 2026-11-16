@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PostCard from '../../../components/PostCard.astro';
+import BackLink from '../../../components/BackLink.astro';
+import { getPosts, getTags } from '../../../lib/content';
+import { withBase } from '../../../lib/url';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const tags = getTags(posts);
+  return tags.map((item) => ({
+    params: { tag: item.tag },
+    props: { tag: item.tag },
+  }));
+}
+
+interface Props {
+  tag: string;
+}
+
+const { tag } = Astro.props;
+const posts = (await getPosts()).filter((post) => post.data.tags.includes(tag));
+---
+
+<BaseLayout title={`#${tag}`} description={`标签「${tag}」下的文章。`}>
+  <div class="shell page">
+    <BackLink href="/blog/tags/" label="返回标签" />
+
+    <header class="page-header">
+      <p class="eyebrow"><a href={withBase('/blog/tags/')}>Tags</a> /</p>
+      <h1 class="page-title">#{tag}</h1>
+      <p class="page-lede">共 {posts.length} 篇。</p>
+    </header>
+
+    <div class="post-list">
+      {posts.map((post) => <PostCard post={post} />)}
+    </div>
+  </div>
+</BaseLayout>

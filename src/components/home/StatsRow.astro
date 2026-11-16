@@ -1,0 +1,28 @@
+---
+import { getSiteStats } from '../../lib/stats';
+import { formatNumber } from '../../lib/format';
+import { siteConfig } from '../../site.config';
+
+const stats = await getSiteStats();
+const labels = siteConfig.copy.stats;
+const items = [
+  { label: labels.posts, value: stats.postCount },
+  { label: labels.notes, value: stats.noteCount },
+  { label: labels.recreation, value: stats.recreationCount },
+  { label: labels.cards, value: stats.cardCount },
+  { label: labels.words, value: stats.words },
+];
+---
+
+<section class="section" aria-label="站点统计">
+  <div class="stats-row">
+    {
+      items.map((item) => (
+        <div class="stat">
+          <div class="stat-value">{formatNumber(item.value)}</div>
+          <div class="stat-label">{item.label}</div>
+        </div>
+      ))
+    }
+  </div>
+</section>

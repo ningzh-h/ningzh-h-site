@@ -1,0 +1,76 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+  label?: string;
+}
+
+const { headings, label = '目录' } = Astro.props;
+const visible = headings.filter(
+  (heading) =>
+    (heading.depth === 2 || heading.depth === 3) && heading.slug !== 'footnote-label',
+);
+---
+
+{
+  visible.length > 0 && (
+    <aside class="toc" aria-label={label}>
+      <div class="toc-inner">
+        <p class="toc-title">{label}</p>
+        <ul class="toc-list">
+          {visible.map((heading) => (
+            <li class={`depth-${heading.depth}`}>
+              <a href={`#${heading.slug}`}>{heading.text}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </aside>
+  )
+}
+
+<script>
+  const toc = document.querySelector<HTMLElement>('.toc');
+  if (toc) {
+    const links = Array.from(toc.querySelectorAll<HTMLAnchorElement>('.toc-list a'));
+    const headings = Array.from(
+      document.querySelectorAll<HTMLElement>('.prose h2[id], .prose h3[id]'),
+    );
+    const byId = new Map(links.map((link) => [link.hash.slice(1), link]));
+
+    let ticking = false;
+
+    function update() {
+      ticking = false;
+      if (headings.length === 0) return;
+      const offset = 96;
+      let current = headings[0];
+      for (const heading of headings) {
+        if (heading.getBoundingClientRect().top <= offset) current = heading;
+        else break;
+      }
+      const active = byId.get(current.id);
+      for (const link of links) {
+        const isActive = link === active;
+        link.classList.toggle('is-active', isActive);
+        if (isActive) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      }
+    }
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  }
+</script>

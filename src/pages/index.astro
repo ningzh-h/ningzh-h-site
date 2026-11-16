@@ -1,0 +1,35 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HomeIntro from '../components/home/HomeIntro.astro';
+import PhotoWall from '../components/home/PhotoWall.astro';
+import PinnedBooks from '../components/home/PinnedBooks.astro';
+import RecentPosts from '../components/home/RecentPosts.astro';
+import CardsPreview from '../components/home/CardsPreview.astro';
+import ShelfPreview from '../components/home/ShelfPreview.astro';
+import StatsRow from '../components/home/StatsRow.astro';
+import { getPage } from '../lib/pages';
+import { siteConfig } from '../site.config';
+
+const page = await getPage('home');
+const { Content } = await render(page);
+const sections = page.data.sections;
+---
+
+<BaseLayout description={page.data.description || siteConfig.description}>
+  <div class="shell home">
+    <HomeIntro page={page} />
+
+    <div class="home-prose prose">
+      <Content />
+    </div>
+
+    <PhotoWall photos={page.data.photos} />
+
+    {sections.includes('stats') && <StatsRow />}
+    {sections.includes('notes') && <PinnedBooks />}
+    {sections.includes('posts') && <RecentPosts limit={5} />}
+    {sections.includes('cards') && <CardsPreview limit={4} />}
+    {sections.includes('shelf') && <ShelfPreview limit={4} />}
+  </div>
+</BaseLayout>

@@ -1,0 +1,135 @@
+/* 设计 Token：颜色、字体、尺寸。改主题基本只需要改这里。 */
+
+:root {
+  color-scheme: light;
+
+  --bg: #fbfaf7;
+  --surface: #ffffff;
+  --surface-2: #f4f1ea;
+  --surface-3: #efece4;
+  --text: #23211d;
+  --text-soft: #4a463f;
+  --muted: #6f6b63;
+  --border: #e8e4dc;
+  --border-strong: #d8d2c6;
+  --accent: #2f6f62;
+  --accent-hover: #24584d;
+  --accent-soft: #e8f1ee;
+  --accent-contrast: #ffffff;
+  --danger: #a1463b;
+
+  --code-bg: #f5f3ee;
+  --selection: #d9ebe5;
+
+  --shadow-sm: 0 1px 2px rgba(35, 33, 29, 0.05);
+  --shadow-md: 0 10px 30px rgba(35, 33, 29, 0.08);
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+
+  --content: 46rem;
+  --wide: 74rem;
+  --sidebar: 17rem;
+  --header-h: 60px;
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-mono:
+    "Cascadia Code", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+    monospace;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #17181a;
+  --surface: #1f2023;
+  --surface-2: #24262a;
+  --surface-3: #2a2c31;
+  --text: #e9e6e1;
+  --text-soft: #cbc6bd;
+  --muted: #a09a91;
+  --border: #2e2f33;
+  --border-strong: #3d3f45;
+  --accent: #7fb8a9;
+  --accent-hover: #a3d0c4;
+  --accent-soft: #22332f;
+  --accent-contrast: #10201c;
+  --danger: #e08c80;
+
+  --code-bg: #202226;
+  --selection: #2d4a43;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* -------------------------------------------------------------------------- */
+/* 可选配色（通过 html[data-accent] 切换；默认是墨绿）                        */
+/* -------------------------------------------------------------------------- */
+
+[data-accent='mist'] {
+  --accent: #3b6385;
+  --accent-hover: #2d4f6c;
+  --accent-soft: #e9f0f6;
+  --accent-contrast: #ffffff;
+  --selection: #d8e6f1;
+}
+
+[data-theme='dark'][data-accent='mist'] {
+  --accent: #8fb9d6;
+  --accent-hover: #b3d3ea;
+  --accent-soft: #20303e;
+  --accent-contrast: #10202b;
+  --selection: #2a4052;
+}
+
+[data-accent='clay'] {
+  --accent: #9a5b3f;
+  --accent-hover: #7d4630;
+  --accent-soft: #f4e9e2;
+  --accent-contrast: #ffffff;
+  --selection: #ecd9cc;
+}
+
+[data-theme='dark'][data-accent='clay'] {
+  --accent: #d9a07e;
+  --accent-hover: #e8bda2;
+  --accent-soft: #33251d;
+  --accent-contrast: #24160f;
+  --selection: #3f2c21;
+}
+
+[data-accent='plum'] {
+  --accent: #6b4a7a;
+  --accent-hover: #573a64;
+  --accent-soft: #efe8f3;
+  --accent-contrast: #ffffff;
+  --selection: #e3d6ea;
+}
+
+[data-theme='dark'][data-accent='plum'] {
+  --accent: #c39bd6;
+  --accent-hover: #d7b9e6;
+  --accent-soft: #2c2233;
+  --accent-contrast: #1c1223;
+  --selection: #382a42;
+}
+
+[data-accent='ink'] {
+  --accent: #4b4b4b;
+  --accent-hover: #333333;
+  --accent-soft: #efefef;
+  --accent-contrast: #ffffff;
+  --selection: #e0e0e0;
+}
+
+[data-theme='dark'][data-accent='ink'] {
+  --accent: #c4c4c4;
+  --accent-hover: #dedede;
+  --accent-soft: #2b2b2b;
+  --accent-contrast: #151515;
+  --selection: #3a3a3a;
+}

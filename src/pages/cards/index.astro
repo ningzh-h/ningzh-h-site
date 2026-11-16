@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CardNote from '../../components/CardNote.astro';
+import { getCards } from '../../lib/cards';
+import { fillCopy } from '../../lib/copy';
+import { siteConfig } from '../../site.config';
+
+const cards = await getCards();
+const copy = siteConfig.copy.cards;
+const lede = fillCopy(copy.lede, { count: cards.length });
+---
+
+<BaseLayout title={copy.title} description={lede}>
+  <div class="shell page">
+    <header class="page-header">
+      <p class="eyebrow">{copy.eyebrow}</p>
+      <h1 class="page-title">{copy.title}</h1>
+      <p class="page-lede">{lede}</p>
+    </header>
+
+    {
+      cards.length > 0 ? (
+        <div class="cards-grid">
+          {cards.map((card) => (
+            <CardNote card={card} />
+          ))}
+        </div>
+      ) : (
+        <p class="empty">还没有卡片。在 `src/content/cards/` 下新建 Markdown 即可。</p>
+      )
+    }
+  </div>
+</BaseLayout>

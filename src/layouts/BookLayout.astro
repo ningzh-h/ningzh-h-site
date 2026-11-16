@@ -1,0 +1,248 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import BookSidebar from '../components/BookSidebar.astro';
+import NoteOutline from '../components/NoteOutline.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import TagList from '../components/TagList.astro';
+import { NOTE_SIDEBAR_DEPTH, type BookInfo, type ChapterInfo } from '../lib/content';
+import { formatNumber } from '../lib/format';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  book: BookInfo;
+  chapter?: ChapterInfo;
+  headings: Heading[];
+  isIndex?: boolean;
+  prev?: ChapterInfo;
+  next?: ChapterInfo;
+  nextLabel?: string;
+}
+
+const {
+  book,
+  chapter,
+  headings,
+  isIndex = false,
+  prev,
+  next,
+  nextLabel = '下一章',
+} = Astro.props;
+
+const chapterNumber = chapter
+  ? book.chapters.findIndex((item) => item.id === chapter.id) + 1
+  : 0;
+const totalChapters = book.chapters.length;
+const countLabel =
+  book.mode === 'single'
+    ? '单篇长文'
+    : book.chapters.length > 0
+      ? `${totalChapters} 章`
+      : `${book.pageCount} 节`;
+
+const pageTitle = chapter ? `${chapter.title} · ${book.title}` : book.title;
+const description = chapter
+  ? `${book.title} · 第 ${chapterNumber} 章：${chapter.title}`
+  : book.description;
+
+const statusLabels: Record<string, string> = {
+  reading: '在读',
+  finished: '读完',
+  planned: '想读',
+  paused: '搁置',
+  todo: '待开始',
+  doing: '进行中',
+  done: '已完成',
+  archived: '已归档',
+};
+const statusLabel = statusLabels[book.status] ?? book.status;
+---
+
+<BaseLayout title={pageTitle} description={description} type="article">
+  <div class="shell book-shell" data-book-shell data-drawer-open="false">
+    <BookSidebar book={book} chapter={chapter} headings={headings} isIndex={isIndex} />
+    <div class="drawer-overlay" data-drawer-overlay aria-hidden="true"></div>
+
+    <div class="book-main">
+      <div class="book-mobile-bar">
+        <button class="btn" type="button" data-book-open aria-controls="book-sidebar">
+          目录
+        </button>
+        <span class="book-mobile-title">{book.title}</span>
+        {chapter && <span class="book-mobile-progress">{chapterNumber}/{totalChapters}</span>}
+      </div>
+
+      <header class="book-chapter-head">
+        <div class="book-chapter-eyebrow">
+          {chapter ? (
+            <>
+              <span>{book.title}</span>
+              <span aria-hidden="true">·</span>
+              <span>
+                第 {chapterNumber} / {totalChapters} 章
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>{chapter.readingMinutes} 分钟</span>
+              {chapter.draft && <span class="draft-badge">草稿</span>}
+            </>
+          ) : (
+            <>
+              <span class={`status status-${book.status}`}>{statusLabel}</span>
+              <span>{countLabel}</span>
+              <span aria-hidden="true">·</span>
+              <span>{formatNumber(book.wordCount)} 字</span>
+            </>
+          )}
+        </div>
+        <h1 class="book-chapter-title">{chapter?.title ?? book.title}</h1>
+        {isIndex && description && <p class="page-lede">{description}</p>}
+        {isIndex && book.tags.length > 0 && (
+          <div style="margin-top:14px">
+            <TagList tags={book.tags} linked={false} />
+          </div>
+        )}
+        <div class="book-tools">
+          <button class="btn" type="button" data-print>打印 / 保存 PDF</button>
+        </div>
+      </header>
+
+      {isIndex && book.mode === 'chapters' && book.pageCount > 0 && (
+        <section aria-labelledby="chapter-list-title" style="margin-bottom:36px">
+          <div class="section-head">
+            <h2 class="section-title" id="chapter-list-title">
+              目录 <span>{book.pageCount} 节</span>
+            </h2>
+          </div>
+          <NoteOutline dir={book.tree} maxDepth={NOTE_SIDEBAR_DEPTH} />
+        </section>
+      )}
+
+      <div class="prose">
+        <slot />
+      </div>
+
+      {(prev || next) && (
+        <nav class="book-pager" aria-label="章节导航">
+          {prev ? (
+            <a href={prev.href}>
+              <span class="book-pager-label">← 上一章</span>
+              <span>{prev.title}</span>
+            </a>
+          ) : (
+            <span />
+          )}
+          {next ? (
+            <a class="next" href={next.href}>
+              <span class="book-pager-label">{nextLabel} →</span>
+              <span>{next.title}</span>
+            </a>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )}
+    </div>
+
+    <TableOfContents headings={headings} label="本页目录" />
+  </div>
+
+  <script>
+    const shell = document.querySelector<HTMLElement>('[data-book-shell]');
+    if (shell) {
+      const open = () => shell.setAttribute('data-drawer-open', 'true');
+      const close = () => shell.setAttribute('data-drawer-open', 'false');
+
+      shell.querySelector('[data-book-open]')?.addEventListener('click', open);
+      shell.querySelector('[data-book-close]')?.addEventListener('click', close);
+      shell.querySelector('[data-drawer-overlay]')?.addEventListener('click', close);
+      shell.querySelector('[data-print]')?.addEventListener('click', () => {
+        const details = Array.from(shell.querySelectorAll<HTMLDetailsElement>('details'));
+        const states = details.map((item) => item.open);
+        details.forEach((item) => {
+          item.open = true;
+        });
+        window.print();
+        window.addEventListener(
+          'afterprint',
+          () => {
+            details.forEach((item, index) => {
+              item.open = states[index] ?? false;
+            });
+          },
+          { once: true },
+        );
+      });
+      shell.querySelector('[data-print]')?.addEventListener('click', () => window.print());
+      shell.querySelectorAll('.book-sidebar a').forEach((link) => {
+        link.addEventListener('click', () => {
+          if (window.matchMedia('(max-width: 1023px)').matches) close();
+        });
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') close();
+      });
+    }
+  </script>
+
+  <style>
+    .book-mobile-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .book-tools {
+      margin-top: 16px;
+    }
+
+    .book-mobile-progress {
+      margin-left: auto;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .chapter-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid var(--border);
+    }
+
+    .chapter-list a {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 2px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14.5px;
+    }
+
+    .chapter-list a:hover {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .chapter-num {
+      margin-right: 10px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .chapter-time {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 12px;
+    }
+  </style>
+</BaseLayout>

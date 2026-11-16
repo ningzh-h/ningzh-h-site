@@ -1,0 +1,28 @@
+# 依赖与构建产物
+node_modules/
+dist/
+.astro/
+.astro-content/
+
+# 测试产物
+test-results/
+playwright-report/
+blob-report/
+
+# 笔记导出产物
+exports/
+
+# 本地生成的 Windows 启动器
+*.exe
+*.bat
+
+# 环境与编辑器
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+
+# 日志与临时文件
+*.log
+npm-debug.log*

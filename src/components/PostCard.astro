@@ -1,0 +1,43 @@
+---
+import type { BlogPost } from '../lib/content';
+import { postGroup, postGroupLabel, readingMinutesOf } from '../lib/content';
+import { formatDate } from '../lib/format';
+import { postHref } from '../lib/content';
+
+interface Props {
+  post: BlogPost;
+  featured?: boolean;
+  showDescription?: boolean;
+}
+
+const { post, featured = false, showDescription = true } = Astro.props;
+const minutes = readingMinutesOf(post);
+const group = postGroup(post.id);
+---
+
+<a class:list={['post-card', { 'post-card--featured': featured }]} href={postHref(post.id)}>
+  <div class="post-card-meta">
+    <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+    <span aria-hidden="true">·</span>
+    <span>{minutes} 分钟</span>
+    {post.data.draft && <span class="draft-badge">草稿</span>}
+    {
+      group && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span class="post-group" title={group}>{postGroupLabel(group)}</span>
+        </>
+      )
+    }
+    {
+      post.data.tags.length > 0 && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span>{post.data.tags.join(' / ')}</span>
+        </>
+      )
+    }
+  </div>
+  <h3 class="post-card-title">{post.data.title}</h3>
+  {showDescription && post.data.description && <p class="post-card-desc">{post.data.description}</p>}
+</a>

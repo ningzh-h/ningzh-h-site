@@ -1,0 +1,103 @@
+---
+import type { NoteDir } from '../lib/content';
+import NoteOutline from './NoteOutline.astro';
+
+interface Props {
+  dir: NoteDir;
+  maxDepth?: number;
+  depth?: number;
+}
+
+const { dir, maxDepth = 2, depth = 0 } = Astro.props;
+const canDescend = depth < maxDepth;
+
+function childLabel(child: NoteDir): string {
+  if (child.index) {
+    return child.files.length > 0 ? `${child.files.length} 章` : `${child.pageCount || 1} 节`;
+  }
+  return `${child.pageCount} 节`;
+}
+---
+
+<ul class="note-outline">
+  {
+    dir.files.map((file) => (
+      <li>
+        <a href={file.href}>
+          <span>{file.title}</span>
+          <span class="note-outline-meta">{file.readingMinutes} 分钟 →</span>
+        </a>
+      </li>
+    ))
+  }
+  {
+    dir.dirs.map((child) => (
+      <li class="note-outline-group">
+        {child.href ? (
+          <a class="note-outline-dir" href={child.href}>
+            <span>{child.title}</span>
+            <span class="note-outline-meta">{childLabel(child)} →</span>
+          </a>
+        ) : (
+          <div class="note-outline-dir note-outline-dir--plain">
+            <span>{child.title}</span>
+            <span class="note-outline-meta">{childLabel(child)}</span>
+          </div>
+        )}
+        {canDescend && <NoteOutline dir={child} depth={depth + 1} maxDepth={maxDepth} />}
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .note-outline {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .note-outline .note-outline {
+    margin-left: 18px;
+    border-top: 0;
+  }
+
+  .note-outline a {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 2px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  .note-outline a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .note-outline-dir {
+    font-weight: 600;
+  }
+
+  .note-outline-dir--plain {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 2px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .note-outline-meta {
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: 12px;
+  }
+</style>

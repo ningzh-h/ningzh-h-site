@@ -1,0 +1,137 @@
+---
+import type { NoteDir } from '../lib/content';
+import NoteNav from './NoteNav.astro';
+
+interface Props {
+  dir: NoteDir;
+  defaultOpenDepth?: number;
+  depth?: number;
+  currentPath?: string;
+  currentChapterId?: string;
+  activePath?: string;
+}
+
+const {
+  dir,
+  defaultOpenDepth = 2,
+  depth = 0,
+  currentPath,
+  currentChapterId,
+  activePath = currentPath,
+} = Astro.props;
+
+const isActiveAncestor = (path: string) =>
+  activePath === path || activePath?.startsWith(`${path}/`);
+---
+
+<ul class="book-nav-sub">
+  {
+    dir.files.map((file) => (
+      <li>
+        <a
+          href={file.href}
+          aria-current={file.id === currentChapterId ? 'page' : undefined}
+        >
+          {file.title}
+        </a>
+      </li>
+    ))
+  }
+  {
+    dir.dirs.map((child) => {
+      const open = depth < defaultOpenDepth || Boolean(isActiveAncestor(child.path));
+      return (
+        <li class="book-nav-group">
+          <details class="book-nav-details" open={open}>
+            <summary>
+              {child.href ? (
+                <a
+                  class="book-nav-dir"
+                  href={child.href}
+                  aria-current={currentPath === child.path ? 'page' : undefined}
+                >
+                  {child.title}
+                </a>
+              ) : (
+                <span class="book-nav-dir book-nav-group-label">{child.title}</span>
+              )}
+            </summary>
+            <NoteNav
+              dir={child}
+              depth={depth + 1}
+              defaultOpenDepth={defaultOpenDepth}
+              currentPath={currentPath}
+              currentChapterId={currentChapterId}
+              activePath={activePath}
+            />
+          </details>
+        </li>
+      );
+    })
+  }
+</ul>
+
+<style>
+  .book-nav-sub {
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--border);
+    list-style: none;
+  }
+
+  .book-nav-details {
+    margin: 0;
+  }
+
+  .book-nav-details > summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    padding: 0;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .book-nav-details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .book-nav-details > summary::before {
+    flex: 0 0 auto;
+    margin: 6px 0 0 8px;
+    color: var(--muted);
+    content: '▸';
+    font-size: 10px;
+    transition: transform 0.15s ease;
+  }
+
+  .book-nav-details[open] > summary::before {
+    transform: rotate(90deg);
+  }
+
+  .book-nav-details > summary .book-nav-dir {
+    flex: 1;
+    min-width: 0;
+    padding: 5px 0;
+    border-left: 0;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .book-nav-details > summary .book-nav-dir:hover {
+    color: var(--accent);
+  }
+
+  .book-nav-details > summary .book-nav-dir[aria-current='page'] {
+    color: var(--accent);
+  }
+
+  .book-nav-group-label {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .book-nav-details > .book-nav-sub {
+    margin-left: 12px;
+  }
+</style>

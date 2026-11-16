@@ -1,0 +1,21 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getPage } from '../lib/pages';
+
+const page = await getPage('about');
+const { Content } = await render(page);
+---
+
+<BaseLayout title={page.data.title} description={page.data.description}>
+  <div class="shell page">
+    <header class="page-header">
+      <p class="eyebrow">About</p>
+      <h1 class="page-title">{page.data.title}</h1>
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+  </div>
+</BaseLayout>

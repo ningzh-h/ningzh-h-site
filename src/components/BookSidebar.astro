@@ -1,0 +1,163 @@
+---
+import type { BookInfo, ChapterInfo } from '../lib/content';
+import { NOTE_SIDEBAR_DEPTH } from '../lib/content';
+import NoteNav from './NoteNav.astro';
+import { withBase } from '../lib/url';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  book: BookInfo;
+  chapter?: ChapterInfo;
+  headings: Heading[];
+  isIndex?: boolean;
+}
+
+const { book, chapter, headings, isIndex = false } = Astro.props;
+
+const statusLabels: Record<string, string> = {
+  reading: '在读',
+  finished: '读完',
+  planned: '想读',
+  paused: '搁置',
+  todo: '待开始',
+  doing: '进行中',
+  done: '已完成',
+  archived: '已归档',
+};
+const statusLabel = statusLabels[book.status] ?? book.status;
+
+const subHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const countLabel =
+  book.mode === 'single'
+    ? '单篇长文'
+    : book.chapters.length > 0
+      ? `${book.chapters.length} 章`
+      : `${book.pageCount} 节`;
+
+const back = chapter
+  ? { href: book.href, label: `返回${book.title}` }
+  : book.parent?.href
+    ? { href: book.parent.href, label: `返回${book.parent.title}` }
+    : { href: withBase('/notes/'), label: '返回笔记' };
+---
+
+<aside class="book-sidebar" id="book-sidebar" aria-label="笔记目录">
+  <nav class="book-breadcrumb" aria-label="笔记路径">
+    <a href={withBase('/notes/')}>笔记</a>
+    {
+      book.ancestors.map((ancestor) => (
+        <>
+          <span aria-hidden="true">/</span>
+          {ancestor.href ? (
+            <a href={ancestor.href}>{ancestor.title}</a>
+          ) : (
+            <span>{ancestor.title}</span>
+          )}
+        </>
+      ))
+    }
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">{book.title}</span>
+  </nav>
+
+  <a class="book-back" href={back.href}>← {back.label}</a>
+  <p class="book-sidebar-title">{book.title}</p>
+  <div class="book-sidebar-meta">
+    <span class={`status status-${book.status}`}>{statusLabel}</span>
+    <span>{countLabel}</span>
+  </div>
+
+  <nav class="book-nav" aria-label="笔记目录">
+    {
+      book.mode === 'chapters' ? (
+        <>
+          <a
+            class="book-nav-root"
+            href={book.href}
+            aria-current={isIndex ? 'page' : undefined}
+          >
+            前言
+          </a>
+          <NoteNav
+            dir={book.tree}
+            currentPath={book.path}
+            currentChapterId={chapter?.id}
+            activePath={chapter?.dirPath ?? book.path}
+            defaultOpenDepth={NOTE_SIDEBAR_DEPTH}
+          />
+        </>
+      ) : (
+        <>
+          <a
+            class="book-nav-root"
+            href={book.href}
+            aria-current={isIndex ? 'page' : undefined}
+          >
+            从头读
+          </a>
+          {subHeadings.map((heading) => (
+            <a href={`#${heading.slug}`} class={heading.depth === 3 ? 'depth-3' : undefined}>
+              {heading.text}
+            </a>
+          ))}
+        </>
+      )
+    }
+  </nav>
+
+  <button class="book-close" type="button" data-book-close>关闭目录</button>
+</aside>
+
+<style>
+  .book-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .book-breadcrumb a {
+    color: var(--muted);
+  }
+
+  .book-breadcrumb a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .book-breadcrumb span[aria-current='page'] {
+    color: var(--text);
+  }
+
+  .book-nav a.depth-3 {
+    padding-left: 24px;
+    font-size: 12.5px;
+  }
+
+  .book-close {
+    display: none;
+    margin-top: 24px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 1023px) {
+    .book-close {
+      display: inline-flex;
+    }
+  }
+</style>

@@ -1,0 +1,105 @@
+---
+import type { PageEntry } from '../../lib/pages';
+import { siteConfig } from '../../site.config';
+import { withBase } from '../../lib/url';
+
+interface Props {
+  page: PageEntry;
+}
+
+const { page } = Astro.props;
+const avatarPath = page.data.avatar ?? siteConfig.avatar;
+const avatar = withBase(avatarPath);
+const status = page.data.status.trim();
+---
+
+<header class="home-intro">
+  <div class="home-avatar">
+    <img
+      src={avatar}
+      alt={`${siteConfig.name} 的头像`}
+      width="72"
+      height="72"
+      loading="eager"
+    />
+  </div>
+
+  <div class="home-identity">
+    <h1 class="home-name">{siteConfig.name}</h1>
+    {status && <span class="home-status">{status}</span>}
+  </div>
+</header>
+
+<style>
+  .home-intro {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 28px 0 22px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .home-avatar {
+    flex: 0 0 auto;
+    width: 72px;
+    height: 72px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--surface-2);
+  }
+
+  .home-avatar img,
+  .home-avatar-mark {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .home-avatar-mark {
+    color: var(--accent);
+  }
+
+  .home-avatar-mark svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .home-avatar-mark path {
+    stroke: var(--accent-contrast);
+  }
+
+  .home-identity {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .home-name {
+    font-size: 1.45rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  .home-status {
+    padding: 2px 9px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  @media (max-width: 600px) {
+    .home-avatar {
+      width: 58px;
+      height: 58px;
+    }
+
+    .home-name {
+      font-size: 1.3rem;
+    }
+  }
+</style>

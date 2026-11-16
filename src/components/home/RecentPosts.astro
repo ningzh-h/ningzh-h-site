@@ -1,0 +1,32 @@
+---
+import PostCard from '../PostCard.astro';
+import { getPosts } from '../../lib/content';
+import { withBase } from '../../lib/url';
+
+interface Props {
+  limit?: number;
+}
+
+const { limit = 5 } = Astro.props;
+const posts = (await getPosts()).slice(0, limit);
+---
+
+{
+  posts.length > 0 && (
+    <section class="section" aria-labelledby="recent-posts-title">
+      <div class="section-head">
+        <h2 class="section-title" id="recent-posts-title">
+          最近写的 <span>博客</span>
+        </h2>
+        <a class="section-more" href={withBase('/blog/')}>
+          全部文章 →
+        </a>
+      </div>
+      <div class="post-list">
+        {posts.map((post) => (
+          <PostCard post={post} />
+        ))}
+      </div>
+    </section>
+  )
+}

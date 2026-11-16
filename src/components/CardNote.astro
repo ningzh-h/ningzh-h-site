@@ -1,0 +1,32 @@
+---
+import type { CardItem } from '../lib/cards';
+import { formatShortDate } from '../lib/format';
+
+interface Props {
+  card: CardItem;
+}
+
+const { card } = Astro.props;
+---
+
+<article class="card-note">
+  <div class="card-note-meta">
+    {card.group && <span class="card-note-group">{card.group}</span>}
+    {card.date && (
+      <time datetime={card.date.toISOString()}>{formatShortDate(card.date)}</time>
+    )}
+  </div>
+
+  <a class="card-note-title" href={card.href}>{card.title}</a>
+  <p class="card-note-excerpt">{card.excerpt}</p>
+
+  {
+    card.tags.length > 0 && (
+      <div class="card-note-tags">
+        {card.tags.map((tag) => (
+          <span class="tag">#{tag}</span>
+        ))}
+      </div>
+    )
+  }
+</article>

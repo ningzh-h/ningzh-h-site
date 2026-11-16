@@ -1,0 +1,109 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import {
+  getRecreationEntries,
+  groupRecreation,
+} from '../../../lib/recreation';
+import { formatDate, formatRating } from '../../../lib/format';
+
+export async function getStaticPaths() {
+  const categories = groupRecreation(await getRecreationEntries());
+  return categories.map((category) => ({
+    params: { category: category.key },
+    props: { categoryKey: category.key },
+  }));
+}
+
+interface Props {
+  categoryKey: string;
+}
+
+const { categoryKey } = Astro.props;
+const categories = groupRecreation(await getRecreationEntries());
+const category = categories.find((item) => item.key === categoryKey);
+
+if (!category) {
+  throw new Error(`[recreation] 找不到分类：${categoryKey}`);
+}
+
+const chapters = await Promise.all(
+  category.items.map(async (item) => {
+    const { Content } = await render(item.entry);
+    return { item, Content };
+  }),
+);
+---
+
+<BaseLayout
+  title={`${category.label} · 书籍视图`}
+  description={`${category.description} 以书的方式连续阅读。`}
+>
+  <div class="shell shelf-shell">
+    <aside class="shelf-sidebar" aria-label="书籍目录">
+      <a class="book-back" href={category.href}>← 返回卡片视图</a>
+      <p class="book-sidebar-title">{category.label} · 书</p>
+      <div class="book-sidebar-meta">
+        <span>{category.items.length} 篇</span>
+        <span>按首字母</span>
+      </div>
+
+      <nav class="book-nav" aria-label="篇目">
+        {
+          chapters.map(({ item }, index) => (
+            <a href={`#review-${index + 1}`}>
+              {index + 1}. {item.title}
+            </a>
+          ))
+        }
+      </nav>
+
+      <div class="view-toggle">
+        <a class="btn" href={category.href}>卡片视图</a>
+        <span class="btn btn--primary">书籍视图</span>
+      </div>
+    </aside>
+
+    <div class="shelf-main">
+      <header class="page-header">
+        <p class="eyebrow">Shelf / {category.label} / Book</p>
+        <h1 class="page-title">{category.label} · 书</h1>
+        <p class="page-lede">
+          {category.description} 共 {category.items.length} 篇，按拼音首字母排列。可以连续往下读，也可以从左侧目录跳转。
+        </p>
+        <div class="view-toggle">
+          <a class="btn" href={category.href}>卡片视图</a>
+          <span class="btn btn--primary">书籍视图</span>
+        </div>
+      </header>
+
+      {
+        chapters.map(({ item, Content }, index) => (
+          <section
+            class="review-chapter"
+            id={`review-${index + 1}`}
+            aria-labelledby={`review-${index + 1}-title`}
+          >
+            <header class="review-chapter-head">
+              <div class="review-chapter-meta">
+                <span class="review-chapter-num">第 {index + 1} 篇</span>
+                <span class="tag">{item.categoryLabel}</span>
+                {item.creator && <span>{item.creator}</span>}
+                <time datetime={item.date.toISOString()}>{formatDate(item.date)}</time>
+                {item.rating && <span class="rating">{formatRating(item.rating)}</span>}
+              </div>
+              <h2 class="review-chapter-title" id={`review-${index + 1}-title`}>
+                {item.title}
+              </h2>
+              <a class="review-chapter-link" href={item.href}>单独打开 →</a>
+            </header>
+
+            <div class="prose">
+              <Content />
+            </div>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</BaseLayout>

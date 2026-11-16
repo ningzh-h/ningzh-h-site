@@ -1,0 +1,146 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ReviewCard from '../../../components/ReviewCard.astro';
+import {
+  getRecreationEntries,
+  getRecreationIntros,
+  groupRecreation,
+  groupRecreationByInitial,
+  shelfAnchor,
+  shelfGroupAnchor,
+} from '../../../lib/recreation';
+import { withBase } from '../../../lib/url';
+
+export async function getStaticPaths() {
+  const categories = groupRecreation(await getRecreationEntries());
+  return categories.map((category) => ({
+    params: { category: category.key },
+    props: { categoryKey: category.key },
+  }));
+}
+
+interface Props {
+  categoryKey: string;
+}
+
+const { categoryKey } = Astro.props;
+const entries = await getRecreationEntries();
+const intros = await getRecreationIntros();
+const categories = groupRecreation(entries, intros);
+const category = categories.find((item) => item.key === categoryKey);
+
+if (!category) {
+  throw new Error(`[recreation] 找不到分类：${categoryKey}`);
+}
+
+const intro = category.intro ? await render(category.intro) : undefined;
+const IntroContent = intro?.Content;
+const groupIntros = new Map<string, Awaited<ReturnType<typeof render>>['Content']>();
+for (const group of category.groups) {
+  if (group.intro) {
+    const { Content } = await render(group.intro);
+    groupIntros.set(group.path, Content);
+  }
+}
+
+const hasFolders = category.groups.some((group) => group.path);
+const displayLetter = (letter: string) => (letter === '#' ? '其他' : letter);
+const groups = hasFolders
+  ? category.groups.map((group) => ({
+      key: group.path,
+      label: group.label,
+      items: group.items,
+      anchor: shelfGroupAnchor(group.path),
+      intro: groupIntros.get(group.path),
+    }))
+  : groupRecreationByInitial(category.items).map((group) => ({
+      key: group.letter,
+      label: displayLetter(group.letter),
+      items: group.items,
+      anchor: shelfAnchor(group.letter),
+      intro: undefined,
+    }));
+---
+
+<BaseLayout title={`${category.label} · 书影音`} description={category.description}>
+  <div class="shell shelf-shell">
+    <aside class="shelf-sidebar" aria-label="书影音分类">
+      <a class="book-back" href={withBase('/shelf/')}>← 返回书影音</a>
+      <p class="book-sidebar-title">{category.label}</p>
+      <div class="book-sidebar-meta">
+        <span>{category.items.length} 条</span>
+        <span>{groups.length} {hasFolders ? '组' : '个首字母'}</span>
+      </div>
+
+      <nav class="shelf-nav" aria-label="分类">
+        {
+          categories.map((item) => (
+            <a
+              href={item.href}
+              aria-current={item.key === category.key ? 'page' : undefined}
+            >
+              <span>{item.label}</span>
+              <span>{item.items.length}</span>
+            </a>
+          ))
+        }
+      </nav>
+
+      <nav class="shelf-nav shelf-group-nav" aria-label="分组">
+        {
+          groups.map((group) => (
+            <a href={`#${group.anchor}`}>
+              <span>{group.label}</span>
+              <span>{group.items.length}</span>
+            </a>
+          ))
+        }
+      </nav>
+    </aside>
+
+    <div class="shelf-main">
+      <header class="page-header">
+        <p class="eyebrow">Shelf / {category.label}</p>
+        <h1 class="page-title">{category.label}</h1>
+        <p class="page-lede">
+          {category.description} 共 {category.items.length} 条，
+          {hasFolders ? '按文件夹分组，组内按首字母排序。' : '按拼音首字母排序。'}
+        </p>
+        <div class="view-toggle">
+          <span class="btn btn--primary">卡片视图</span>
+          <a class="btn" href={withBase(`/shelf/${category.key}/book/`)}>书籍视图</a>
+        </div>
+      </header>
+
+      {IntroContent && <div class="prose shelf-intro"><IntroContent /></div>}
+
+      {
+        groups.map((group) => {
+          const GroupIntro = group.intro;
+          return (
+            <section
+              class="letter-group shelf-group"
+              id={group.anchor}
+              aria-labelledby={`${group.anchor}-title`}
+            >
+              <h2 class="letter-heading" id={`${group.anchor}-title`}>
+                {group.label}
+              </h2>
+              {GroupIntro && (
+                <div class="prose shelf-group-intro">
+                  <GroupIntro />
+                </div>
+              )}
+              <div class="book-grid">
+                {group.items.map((entry) => (
+                  <ReviewCard entry={entry} />
+                ))}
+              </div>
+            </section>
+          );
+        })
+      }
+    </div>
+  </div>
+</BaseLayout>

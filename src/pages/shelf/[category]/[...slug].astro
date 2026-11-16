@@ -1,0 +1,40 @@
+---
+import { render } from 'astro:content';
+import RecreationLayout from '../../../layouts/RecreationLayout.astro';
+import {
+  getRecreationEntries,
+  getRecreationNeighbors,
+  groupRecreation,
+} from '../../../lib/recreation';
+
+export async function getStaticPaths() {
+  const categories = groupRecreation(await getRecreationEntries());
+  return categories.flatMap((category) =>
+    category.items.map((item) => ({
+      params: { category: category.key, slug: item.slug },
+      props: { categoryKey: category.key, slug: item.slug },
+    })),
+  );
+}
+
+interface Props {
+  categoryKey: string;
+  slug: string;
+}
+
+const { categoryKey, slug } = Astro.props;
+const categories = groupRecreation(await getRecreationEntries());
+const category = categories.find((item) => item.key === categoryKey);
+const item = category?.items.find((entry) => entry.slug === slug);
+
+if (!category || !item) {
+  throw new Error(`[recreation] 找不到条目：${categoryKey}/${slug}`);
+}
+
+const { Content, headings } = await render(item.entry);
+const { prev, next } = getRecreationNeighbors(category, item.slug);
+---
+
+<RecreationLayout item={item} category={category} headings={headings} prev={prev} next={next}>
+  <Content />
+</RecreationLayout>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="窗边的光">
+  <defs>
+    <linearGradient id="window-wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eee2d1" />
+      <stop offset="1" stop-color="#c9ab88" />
+    </linearGradient>
+    <linearGradient id="window-light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff8e8" />
+      <stop offset="1" stop-color="#e7cda4" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#window-wall)" />
+  <rect x="300" y="110" width="600" height="620" rx="6" fill="url(#window-light)" />
+  <g stroke="#8b6c4e" stroke-width="14" opacity="0.8">
+    <path d="M600 110v620M300 420h600" />
+  </g>
+  <g fill="#fff9e9" opacity="0.7">
+    <circle cx="430" cy="240" r="62" />
+    <circle cx="760" cy="300" r="38" />
+  </g>
+  <rect x="0" y="730" width="1200" height="170" fill="#a98563" opacity="0.35" />
+</svg>

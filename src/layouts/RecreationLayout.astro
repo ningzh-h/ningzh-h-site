@@ -1,0 +1,76 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import BackLink from '../components/BackLink.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import TagList from '../components/TagList.astro';
+import Pagination from '../components/Pagination.astro';
+import type { RecreationCategory, RecreationItem } from '../lib/recreation';
+import { formatDate, formatRating } from '../lib/format';
+import { withBase } from '../lib/url';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  item: RecreationItem;
+  category: RecreationCategory;
+  headings: Heading[];
+  prev?: RecreationItem;
+  next?: RecreationItem;
+}
+
+const { item, category, headings, prev, next } = Astro.props;
+const prevItem = prev ? { href: prev.href, title: prev.title } : undefined;
+const nextItem = next ? { href: next.href, title: next.title } : undefined;
+---
+
+<BaseLayout title={item.title} description={item.description} type="article">
+  <div class="shell blog-layout">
+    <article class="article">
+      <BackLink href={`/shelf/${category.key}/`} label={`返回${category.label}`} />
+
+      <header class="article-header">
+        <div class="article-meta">
+          <span>{category.label}</span>
+          <span aria-hidden="true">·</span>
+          <time datetime={item.date.toISOString()}>{formatDate(item.date)}</time>
+          {
+            item.creator && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>{item.creator}</span>
+              </>
+            )
+          }
+        </div>
+        <h1 class="article-title">{item.title}</h1>
+        {item.description && <p class="page-lede">{item.description}</p>}
+        <div class="article-meta" style="margin-top:16px;gap:10px">
+          {item.rating && <span class="rating">{formatRating(item.rating)}</span>}
+          <TagList tags={item.tags} linked={false} />
+        </div>
+      </header>
+
+      <div class="prose">
+        <slot />
+      </div>
+
+      <footer class="article-footer">
+        <div class="article-meta" style="margin:0 0 18px">
+          <a href={item.href}>永久链接</a>
+          <span aria-hidden="true">·</span>
+          <a href={withBase(`/shelf/${category.key}/`)}>返回{category.label}</a>
+          <span aria-hidden="true">·</span>
+          <a href={withBase(`/shelf/${category.key}/book/`)}>书籍视图</a>
+        </div>
+        <TagList tags={item.tags} linked={false} />
+        <Pagination prev={prevItem} next={nextItem} prevLabel="上一条" nextLabel="下一条" />
+      </footer>
+    </article>
+
+    <TableOfContents headings={headings} />
+  </div>
+</BaseLayout>

@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getPosts, getTags } from '../../../lib/content';
+import { withBase } from '../../../lib/url';
+
+const posts = await getPosts();
+const tags = getTags(posts);
+---
+
+<BaseLayout title="标签" description="按标签浏览文章。">
+  <div class="shell page">
+    <header class="page-header">
+      <p class="eyebrow">Tags</p>
+      <h1 class="page-title">标签</h1>
+      <p class="page-lede">共 {tags.length} 个标签。</p>
+    </header>
+
+    <ul class="tag-list" style="gap:10px">
+      {
+        tags.map((item) => (
+          <li style="list-style:none">
+            <a
+              class="tag"
+              href={withBase(`/blog/tags/${encodeURIComponent(item.tag)}/`)}
+              style="font-size:13.5px;padding:5px 12px"
+            >
+              #{item.tag} <span style="opacity:.6;margin-left:4px">{item.count}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>

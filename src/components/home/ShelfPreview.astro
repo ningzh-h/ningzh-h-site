@@ -1,0 +1,32 @@
+---
+import ReviewCard from '../ReviewCard.astro';
+import { getRecreationEntries } from '../../lib/recreation';
+import { withBase } from '../../lib/url';
+
+interface Props {
+  limit?: number;
+}
+
+const { limit = 4 } = Astro.props;
+const entries = (await getRecreationEntries()).slice(0, limit);
+---
+
+{
+  entries.length > 0 && (
+    <section class="section" aria-labelledby="shelf-preview-title">
+      <div class="section-head">
+        <h2 class="section-title" id="shelf-preview-title">
+          最近看的 <span>书影音</span>
+        </h2>
+        <a class="section-more" href={withBase('/shelf/')}>
+          全部分类 →
+        </a>
+      </div>
+      <div class="book-grid">
+        {entries.map((entry) => (
+          <ReviewCard entry={entry} />
+        ))}
+      </div>
+    </section>
+  )
+}

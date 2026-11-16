@@ -1,0 +1,30 @@
+---
+import type { RecreationCategory } from '../lib/recreation';
+
+interface Props {
+  category: RecreationCategory;
+}
+
+const { category } = Astro.props;
+const count = category.items.length;
+const initials = category.initials.slice(0, 8).join(' · ');
+---
+
+<a
+  class="book-card shelf-category-card"
+  href={category.href}
+  style={`--cover-b:${category.coverB};`}
+  aria-label={`${category.label}，共 ${count} 条`}
+>
+  <div class="book-cover shelf-category-cover">
+    <span class="cover-badge">{count} 条</span>
+    <span class="book-cover-title">{category.label}</span>
+  </div>
+  <div class="book-body">
+    <p class="book-desc">{category.description}</p>
+    <div class="book-foot">
+      <span>{initials}{category.initials.length > 8 ? ' …' : ''}</span>
+      <span>按首字母 →</span>
+    </div>
+  </div>
+</a>

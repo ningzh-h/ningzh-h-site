@@ -1,0 +1,46 @@
+---
+import { withBase } from '../lib/url';
+
+interface Props {
+  /** 没有可返回的上一页时，点击回退到这个地址 */
+  href?: string;
+  label?: string;
+}
+
+const { href = '/', label = '返回上一页' } = Astro.props;
+const fallback = withBase(href);
+---
+
+<a class="back-link" href={fallback} data-back-link>← {label}</a>
+
+<script>
+  document.querySelectorAll<HTMLAnchorElement>('[data-back-link]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      if (
+        event.defaultPrevented ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      let sameOrigin = false;
+      try {
+        sameOrigin =
+          Boolean(document.referrer) &&
+          new URL(document.referrer).origin === window.location.origin;
+      } catch {
+        sameOrigin = false;
+      }
+
+      // 从站内其他页面跳转过来时，优先回到真正的上一页；
+      // 直接打开、从搜索引擎进入、在新标签页打开时，走 href 兜底。
+      if (sameOrigin && window.history.length > 1) {
+        event.preventDefault();
+        window.history.back();
+      }
+    });
+  });
+</script>

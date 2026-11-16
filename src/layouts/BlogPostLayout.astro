@@ -1,0 +1,116 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import TagList from '../components/TagList.astro';
+import Pagination from '../components/Pagination.astro';
+import BackLink from '../components/BackLink.astro';
+import type { BlogPost } from '../lib/content';
+import { postHref, readingMinutesOf } from '../lib/content';
+import { formatDate } from '../lib/format';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  post: BlogPost;
+  headings: Heading[];
+  prev?: BlogPost;
+  next?: BlogPost;
+}
+
+const { post, headings, prev, next } = Astro.props;
+const minutes = readingMinutesOf(post);
+const prevItem = prev
+  ? { href: postHref(prev.id), title: prev.data.title }
+  : undefined;
+const nextItem = next
+  ? { href: postHref(next.id), title: next.data.title }
+  : undefined;
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description || `${post.data.title} · ${post.data.tags.join('、')}`}
+  type="article"
+>
+  <div class="reading-progress" aria-hidden="true">
+    <div class="reading-progress-bar" data-reading-progress></div>
+  </div>
+
+  <div class="shell blog-layout">
+    <article class="article">
+      <BackLink href="/blog/" />
+
+      <header class="article-header">
+        <div class="article-meta">
+          <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+          <span aria-hidden="true">·</span>
+          <span>{minutes} 分钟阅读</span>
+          {
+            post.data.updated && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>更新于 {formatDate(post.data.updated)}</span>
+              </>
+            )
+          }
+          {post.data.draft && <span class="draft-badge">草稿</span>}
+        </div>
+        <h1 class="article-title">{post.data.title}</h1>
+        {post.data.description && <p class="page-lede">{post.data.description}</p>}
+        <div style="margin-top:16px">
+          <TagList tags={post.data.tags} />
+        </div>
+      </header>
+
+      <div class="prose">
+        <slot />
+      </div>
+
+      <footer class="article-footer">
+        <div class="article-meta" style="margin:0 0 18px">
+          <span>写于 {formatDate(post.data.date)}</span>
+          <span aria-hidden="true">·</span>
+          <a href={postHref(post.id)}>永久链接</a>
+        </div>
+        <TagList tags={post.data.tags} />
+        <Pagination prev={prevItem} next={nextItem} />
+      </footer>
+    </article>
+
+    <TableOfContents headings={headings} />
+  </div>
+
+  <script>
+    const bar = document.querySelector<HTMLElement>('[data-reading-progress]');
+    const article = document.querySelector<HTMLElement>('.article');
+
+    if (bar && article) {
+      let ticking = false;
+
+      function update() {
+        ticking = false;
+        const start = article!.offsetTop;
+        const end = start + article!.offsetHeight - window.innerHeight;
+        const percent =
+          end > start
+            ? Math.min(100, Math.max(0, ((window.scrollY - start) / (end - start)) * 100))
+            : 0;
+        bar!.style.width = `${percent}%`;
+      }
+
+      function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll);
+      update();
+    }
+  </script>
+</BaseLayout>

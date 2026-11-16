@@ -1,0 +1,28 @@
+---
+import { withBase } from '../lib/url';
+
+interface Props {
+  tags: string[];
+  /** 是否链接到标签页，默认 true */
+  linked?: boolean;
+}
+
+const { tags, linked = true } = Astro.props;
+const tagHref = (tag: string) => withBase(`/blog/tags/${encodeURIComponent(tag)}/`);
+---
+
+{
+  tags.length > 0 && (
+    <div class="tag-list">
+      {tags.map((tag) =>
+        linked ? (
+          <a class="tag" href={tagHref(tag)}>
+            #{tag}
+          </a>
+        ) : (
+          <span class="tag">#{tag}</span>
+        ),
+      )}
+    </div>
+  )
+}

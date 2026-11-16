@@ -1,0 +1,83 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import TagList from '../../components/TagList.astro';
+import { getPostGroups, getPosts, getTags, groupHref, type BlogPost } from '../../lib/content';
+import { fillCopy } from '../../lib/copy';
+import { siteConfig } from '../../site.config';
+import { withBase } from '../../lib/url';
+
+const posts = await getPosts();
+const tags = getTags(posts);
+const groups = getPostGroups(posts);
+const copy = siteConfig.copy.blog;
+const lede = fillCopy(copy.lede, { count: posts.length });
+const featured = posts.find((post) => post.data.featured);
+const rest = featured ? posts.filter((post) => post.id !== featured.id) : posts;
+
+const byYear = new Map<number, BlogPost[]>();
+for (const post of rest) {
+  const year = post.data.date.getFullYear();
+  const list = byYear.get(year) ?? [];
+  list.push(post);
+  byYear.set(year, list);
+}
+const years = [...byYear.entries()].sort((a, b) => b[0] - a[0]);
+---
+
+<BaseLayout title={copy.title} description={lede}>
+  <div class="shell page">
+    <header class="page-header">
+      <p class="eyebrow">{copy.eyebrow}</p>
+      <h1 class="page-title">{copy.title}</h1>
+      <p class="page-lede">{lede}</p>
+    </header>
+
+    {tags.length > 0 && <TagList tags={tags.slice(0, 12).map((item) => item.tag)} />}
+
+    {
+      groups.length > 0 && (
+        <div class="tag-list" style="margin-top:10px" aria-label="按文件夹分组">
+          <a class="tag" href={withBase('/blog/groups/')}>全部分组</a>
+          {groups.map((group) => (
+            <a class="tag" href={groupHref(group.group)}>
+              {group.label}
+              <span style="opacity:.6;margin-left:4px">{group.count}</span>
+            </a>
+          ))}
+        </div>
+      )
+    }
+
+    {
+      featured && (
+        <div style="margin-top:28px">
+          <PostCard post={featured} featured />
+        </div>
+      )
+    }
+
+    {
+      years.map(([year, list]) => (
+        <section class="year-group" aria-label={`${year} 年`}>
+          <p class="year-label">{year}</p>
+          <div class="post-list">
+            {list.map((post) => (
+              <PostCard post={post} />
+            ))}
+          </div>
+        </section>
+      ))
+    }
+
+    {
+      posts.length === 0 && (
+        <p class="empty">还没有文章。去 `src/content/blog/` 里写第一篇吧。</p>
+      )
+    }
+
+    <p class="section-more" style="margin-top:32px">
+      <a href={withBase('/blog/archive/')}>按时间查看全部文章 →</a>
+    </p>
+  </div>
+</BaseLayout>

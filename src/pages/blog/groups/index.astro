@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+import { getPostGroups, getPosts } from '../../../lib/content';
+import { groupHref } from '../../../lib/content';
+
+const posts = await getPosts();
+const groups = getPostGroups(posts);
+---
+
+<BaseLayout title="博客分组" description="按文件夹浏览博客文章。">
+  <div class="shell page">
+    <BackLink href="/blog/" label="返回博客" />
+
+    <header class="page-header">
+      <p class="eyebrow">Groups</p>
+      <h1 class="page-title">分组</h1>
+      <p class="page-lede">`src/content/blog/` 下的子目录会成为分组，共 {groups.length} 个。</p>
+    </header>
+
+    {
+      groups.length > 0 ? (
+        <div class="tag-list" style="gap:10px">
+          {groups.map((group) => (
+            <a class="tag" href={groupHref(group.group)} style="font-size:13.5px;padding:5px 12px">
+              {group.label}
+              <span style="opacity:.6;margin-left:4px">{group.count}</span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="empty">还没有分组。把文章放进 `blog/tech/` 这样的子目录即可。</p>
+      )
+    }
+  </div>
+</BaseLayout>

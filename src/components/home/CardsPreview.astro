@@ -1,0 +1,32 @@
+---
+import CardNote from '../CardNote.astro';
+import { getCards } from '../../lib/cards';
+import { withBase } from '../../lib/url';
+
+interface Props {
+  limit?: number;
+}
+
+const { limit = 4 } = Astro.props;
+const cards = (await getCards()).slice(0, limit);
+---
+
+{
+  cards.length > 0 && (
+    <section class="section" aria-labelledby="cards-preview-title">
+      <div class="section-head">
+        <h2 class="section-title" id="cards-preview-title">
+          最近写的 <span>卡片</span>
+        </h2>
+        <a class="section-more" href={withBase('/cards/')}>
+          全部卡片 →
+        </a>
+      </div>
+      <div class="cards-grid">
+        {cards.map((card) => (
+          <CardNote card={card} />
+        ))}
+      </div>
+    </section>
+  )
+}

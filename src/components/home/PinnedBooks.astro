@@ -1,0 +1,32 @@
+---
+import BookCard from '../BookCard.astro';
+import { getBooks } from '../../lib/content';
+import { siteConfig } from '../../site.config';
+import { withBase } from '../../lib/url';
+
+const books = await getBooks();
+const pinned = siteConfig.pinnedBooks
+  .map((slug) => books.find((book) => book.slug === slug))
+  .filter((book): book is NonNullable<typeof book> => Boolean(book))
+  .slice(0, 4);
+---
+
+{
+  pinned.length > 0 && (
+    <section class="section" aria-labelledby="pinned-books-title">
+      <div class="section-head">
+        <h2 class="section-title" id="pinned-books-title">
+          笔记 <span>正在整理</span>
+        </h2>
+        <a class="section-more" href={withBase('/notes/')}>
+          全部笔记 →
+        </a>
+      </div>
+      <div class="book-grid">
+        {pinned.map((book) => (
+          <BookCard book={book} />
+        ))}
+      </div>
+    </section>
+  )
+}

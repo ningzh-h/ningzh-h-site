@@ -1,0 +1,50 @@
+---
+import { render } from 'astro:content';
+import BookLayout from '../../layouts/BookLayout.astro';
+import {
+  getChapterNeighbors,
+  getNotePages,
+  type BookInfo,
+  type ChapterInfo,
+} from '../../lib/content';
+
+export async function getStaticPaths() {
+  const pages = await getNotePages();
+  return pages.map((page) => ({
+    params: { path: page.path },
+    props: {
+      book: page.book,
+      chapter: page.chapter,
+      isIndex: page.isIndex,
+    },
+  }));
+}
+
+interface Props {
+  book: BookInfo;
+  chapter?: ChapterInfo;
+  isIndex: boolean;
+}
+
+const { book, chapter, isIndex } = Astro.props;
+const entry = isIndex ? book.index : chapter?.entry;
+
+if (!entry) {
+  throw new Error(`[notes] 页面缺少内容：${book.path}`);
+}
+
+const { Content, headings } = await render(entry);
+const { prev, next } = getChapterNeighbors(book, chapter);
+---
+
+<BookLayout
+  book={book}
+  chapter={chapter}
+  headings={headings}
+  isIndex={isIndex}
+  prev={prev}
+  next={next}
+  nextLabel={isIndex ? '开始阅读' : '下一章'}
+>
+  <Content />
+</BookLayout>

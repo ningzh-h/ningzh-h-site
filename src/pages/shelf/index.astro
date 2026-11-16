@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ShelfCategoryCard from '../../components/ShelfCategoryCard.astro';
+import { getRecreationEntries, groupRecreation } from '../../lib/recreation';
+import { fillCopy } from '../../lib/copy';
+import { siteConfig } from '../../site.config';
+
+const items = await getRecreationEntries();
+const categories = groupRecreation(items);
+const copy = siteConfig.copy.shelf;
+const lede = fillCopy(copy.lede, { count: items.length });
+---
+
+<BaseLayout title={copy.title} description={lede}>
+  <div class="shell page">
+    <header class="page-header">
+      <p class="eyebrow">{copy.eyebrow}</p>
+      <h1 class="page-title">{copy.title}</h1>
+      <p class="page-lede">{lede}</p>
+    </header>
+
+    {
+      categories.length > 0 ? (
+        <div class="book-grid">
+          {categories.map((category) => (
+            <ShelfCategoryCard category={category} />
+          ))}
+        </div>
+      ) : (
+        <p class="empty">
+          还没有记录。在 `src/content/recreation/&lt;分类&gt;/` 下新建 Markdown 即可。
+        </p>
+      )
+    }
+  </div>
+</BaseLayout>
